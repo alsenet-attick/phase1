@@ -2,11 +2,11 @@
 #-----------------------------------------------------------------------------------------------------------#
 #
 #						USBrobot
-#		License : CC-by-SA
-#		Contribution: Patrice Rojas Alsenet Sa, FreeIt Foundation
+#		License : CC BY-SA
+#		Contribution: Patrice Rojas Alsenet Sa, Free It Foundation
 #		
 #-----------------------------------------------------------------------------------------------------------#
-IMAGE_NAME = 'Entraide'
+IMAGE_NAME = 'Entraide-Numerique'
 if [ "$EUID" -ne 0 ]
   then echo "Please run as root"
   exit
