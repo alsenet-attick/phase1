@@ -6,12 +6,10 @@
 #		Contribution: Patrice Rojas Alsenet Sa, Free It Foundation
 #		
 #-----------------------------------------------------------------------------------------------------------#
-<<<<<<< HEAD
 
 
 
 image_name='Entraide_num'
->>>>>>> 9db76ffbf834375a216b84582e20204f23647d84
 if [ "$EUID" -ne 0 ]
   then echo "Please run as root"
   exit 1
