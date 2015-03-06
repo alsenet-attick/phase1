@@ -6,25 +6,43 @@
 #		Contribution: Patrice Rojas Alsenet Sa, FreeIt Foundation
 #		
 #-----------------------------------------------------------------------------------------------------------#
-IMAGE_NAME = 'Entraide'
+
+
+
+image_name='Entraide_num'
 if [ "$EUID" -ne 0 ]
   then echo "Please run as root"
-  exit
+  exit 1
 fi
 
-if [ -e ./ubuntu-14.04-desktop-amd64.iso ]; 
- then echo "ubuntu iso already exists" 
- else wget http://releases.ubuntu.com/14.04/ubuntu-14.04-desktop-amd64.iso -O ubuntu-14.04-desktop-amd64.iso 
+#prep mysql: for debugging, otherwise mysql socket of host system will be used
+check_mysql_running=($netstat -lnt| awk '$6 == "LISTEN" && $4 ~ ".3306"')
+if [${check_mysql_running} -ne  0] 
+   then echo "Your Mysql server is running! This can raise issues within chroot environnement. Please disable mysql before running this script."
+   exit 1
+fi
+
+#check_apache=($netstat -lnt| awk '$6 == "LISTEN" && $4 ~ ".80"')
+#if [${check_apache} -ne  0] 
+#   then echo "Your Mysql server is running! This can raise issues within chroot environnement. Please disable mysql before running this script."
+#   exit 1
+#fi
+
+
+if [ -e ./ubuntu-14.04-desktop-amd64.iso ];
+    then echo "ubuntu iso already exists" 
+else 
+    wget http://releases.ubuntu.com/14.04/ubuntu-14.04-desktop-amd64.iso -O ubuntu-14.04-desktop-amd64.iso 
+    wget http://releases.ubuntu.com/trusty/MD5SUMS
+    sumcheck={$md5sum -c <(grep ubuntu-14.04-desktop-amd64.iso MD5SUMS)}
+    if [$sumcheck -ne 1]
+        then echo "Exited because MD5 checksum isn't correct!"
+	exit 1
+    fi
 fi
 
 #DEPENDENCIES
 apt-get install syslinux squashfs-tools genisoimage
-
-#prep mysql: to debug else it will use the host system
-service mysql stop
-apt-get remove mysql-server
-killall mysqld
-
 
 #Mount & Extract iso
 mkdir -p mnt extract-cd edit
@@ -70,7 +88,7 @@ mksquashfs edit extract-cd/casper/filesystem.squashfs -xz
 printf $(sudo du -sx --block-size=1 edit | cut -f1) > extract-cd/casper/filesystem.size
 
 #Name of the image
-echo entraide>> extract-cd/README.diskdefines
+echo entraide_numerique>> extract-cd/README.diskdefines
 
 # MD5 sum
 cd $path/extract-cd
@@ -78,7 +96,7 @@ rm md5sum.txt
 find -type f -print0 | xargs -0 md5sum | grep -v isolinux/boot.cat | tee md5sum.txt
 
 
-sudo mkisofs -D -r -V "$IMAGE_NAME" -cache-inodes -J -l -b isolinux/isolinux.bin -c isolinux/boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table -o ../ubuntu-14.04-desktop-remix.iso .
+sudo mkisofs -D -r -V "$image_name" -cache-inodes -J -l -b isolinux/isolinux.bin -c isolinux/boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table -o ../ubuntu-14.04-desktop-remix.iso .
 chown $USER ubuntu-14.04-desktop-remix.iso
 umount edit/dev
 umount mnt
