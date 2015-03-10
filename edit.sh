@@ -15,13 +15,19 @@ dpkg-divert --local --rename --add /sbin/initctl
 apt-get -y install debconf-utils
 apt-get -y update
 apt-get install -y apache2
+apt-get install -y screen
 
 # later add random key generator
 MYSQL_PASSWORD=1234
-debconf-set-selections <<< 'mysql-server mysql-server/root_password password 1234'
-debconf-set-selections <<< 'mysql-server mysql-server/root_password_again password 1234'
+#debconf-set-selections <<< 'mysql-server mysql-server/root_password password 1234'
+#debconf-set-selections <<< 'mysql-server mysql-server/root_password_again password 1234'
 
-apt-get install -y --force-yes mysql-server
+apt-get install software-properties-common
+apt-key adv --recv-keys --keyserver hkp://keyserver.ubuntu.com:80 0xcbcb082a1bb943db
+add-apt-repository 'deb http://mariadb.mirror.nucleus.be//repo/10.0/ubuntu trusty main'
+apt-get update
+DEBIAN_FRONTEND=noninteractive apt-get -y install mariadb-server
+mysqladmin -u root password $MYSQL_PASSWORD
 apt-get install -y php5-mysql php5 libapache2-mod-php5 
 
 #no apt-repo for php5-mcrypt
@@ -46,9 +52,10 @@ adduser -u 23 padder -g services
  su padder
   apt-get install -y gzip git curl python libssl-dev pkg-config build-essential
   apt-get -y update
-  apt-get install -y nodejs npm
+  apt-get install -y nodejs npm # from joyent github
   git clone git://github.com/ether/etherpad-lite.git etherpad
   chmod a+x etherpad/
+  sed '$iscreen -t etherpad node run.js' /etc/rc.local
  exit
 
 # studs
@@ -59,10 +66,21 @@ mv studs /var/www/html
 
 # wisemap
 #adduser wisemap -g services
-git clone https://bitbucket.org/wisemapping/wisemapping-open-source.git /var/www/html/wisemap
-
+git clone https://bitbucket.org/wisemapping/wisemapping-open-source.git /var/www/html/wisemapping
+chown wisemapping:services -R /var/www/html/wisemapping
+cd /var/www/html
+mysql -uroot -p1234 < create-database.sql
+mysql -uroot -Dwisemapping -p1234 < create-schemas.sql
 #touch passwords.txt
 #echo $hash >> passwords.txt
+
+# ethercalc
+#apt-add-repository ppa:chris-lea/redis-server
+#apt-get update
+#apt-get install redis-server
+#git clone https://github.com/audreyt/ethercalc.git
+#adduser -u 26 etherclac -g services
+# !! npm install -g ethercalc
 
 apt-get -y clean
 

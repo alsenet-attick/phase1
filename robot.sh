@@ -6,12 +6,10 @@
 #		Contribution: Patrice Rojas Alsenet Sa, Free It Foundation
 #		
 #-----------------------------------------------------------------------------------------------------------#
-<<<<<<< HEAD
 
 
-
-image_name='Entraide_num'
->>>>>>> 9db76ffbf834375a216b84582e20204f23647d84
+path=($pwd)
+image_name='Entraide_Numerique'
 if [ "$EUID" -ne 0 ]
   then echo "Please run as root"
   exit 1
@@ -26,7 +24,7 @@ fi
 
 #check_apache=($netstat -lnt| awk '$6 == "LISTEN" && $4 ~ ".80"')
 #if [${check_apache} -ne  0] 
-#   then echo "Your Mysql server is running! This can raise issues within chroot environnement. Please disable mysql before running this script."
+#   then echo "Your Apache server is running! This can raise issues within chroot environnement. Please disable mysql before running this script."
 #   exit 1
 #fi
 
@@ -84,9 +82,9 @@ sudo cp extract-cd/casper/filesystem.manifest extract-cd/casper/filesystem.manif
 sed -i '/ubiquity/d' extract-cd/casper/filesystem.manifest-desktop
 sed -i '/casper/d' extract-cd/casper/filesystem.manifest-desktop
 
-rm extract-cd/casper/filesystem.squashfs
+sudo rm extract-cd/casper/filesystem.squashfs
 # Best compression allowed
-mksquashfs edit extract-cd/casper/filesystem.squashfs -xz
+mksquashfs edit extract-cd/casper/filesystem.squashfs
 printf $(sudo du -sx --block-size=1 edit | cut -f1) > extract-cd/casper/filesystem.size
 
 #Name of the image
@@ -97,12 +95,11 @@ cd $path/extract-cd
 rm md5sum.txt
 find -type f -print0 | xargs -0 md5sum | grep -v isolinux/boot.cat | tee md5sum.txt
 
+sudo mksquashfs edit extract-cd/casper/filesystem.squashfs -comp xz -e edit/boot
 
 sudo mkisofs -D -r -V "$image_name" -cache-inodes -J -l -b isolinux/isolinux.bin -c isolinux/boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table -o ../ubuntu-14.04-desktop-remix.iso .
-chown $USER ubuntu-14.04-desktop-remix.iso
+sudo chown $USER ubuntu-14.04-desktop-remix.iso
 umount edit/dev
 umount mnt
 
-#restore mysql
-apt-get install mysql-server
 
