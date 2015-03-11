@@ -22,10 +22,10 @@ MYSQL_PASSWORD=1234
 #debconf-set-selections <<< 'mysql-server mysql-server/root_password password 1234'
 #debconf-set-selections <<< 'mysql-server mysql-server/root_password_again password 1234'
 
-apt-get install software-properties-common
+apt-get install -y software-properties-common
 apt-key adv --recv-keys --keyserver hkp://keyserver.ubuntu.com:80 0xcbcb082a1bb943db
-add-apt-repository 'deb http://mariadb.mirror.nucleus.be//repo/10.0/ubuntu trusty main'
-apt-get update
+add-apt-repository -y 'deb http://mariadb.mirror.nucleus.be//repo/10.0/ubuntu trusty main'
+apt-get -y update
 DEBIAN_FRONTEND=noninteractive apt-get -y install mariadb-server
 mysqladmin -u root password $MYSQL_PASSWORD
 apt-get install -y php5-mysql php5 libapache2-mod-php5 
@@ -81,15 +81,6 @@ mysql -uroot -Dwisemapping -p1234 < create-schemas.sql
 #git clone https://github.com/audreyt/ethercalc.git
 #adduser -u 26 etherclac -g services
 # !! npm install -g ethercalc
-
-apt-get -y clean
-
-umount proc /proc
-umount sysfs /sys
-umount devpts /dev/pts
-
-#rm -rf /tmp/*
-#rm /etc/resolv.conf
 
 exit
 

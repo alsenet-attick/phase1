@@ -17,13 +17,13 @@ fi
 
 #prep mysql: for debugging, otherwise mysql socket of host system will be used
 check_mysql_running=($netstat -lnt| awk '$6 == "LISTEN" && $4 ~ ".3306"')
-if [${check_mysql_running} -ne  0] 
+if [ "${check_mysql_running}" -ne  0 ]
    then echo "Your Mysql server is running! This can raise issues within chroot environnement. Please disable mysql before running this script."
    exit 1
 fi
 
 #check_apache=($netstat -lnt| awk '$6 == "LISTEN" && $4 ~ ".80"')
-#if [${check_apache} -ne  0] 
+#if [ "${check_apache}" -ne  0 ] 
 #   then echo "Your Apache server is running! This can raise issues within chroot environnement. Please disable mysql before running this script."
 #   exit 1
 #fi
@@ -77,14 +77,18 @@ cd $path
 chmod +w extract-cd/casper/filesystem.manifest
 
 # Prepare ISO file
-chroot edit dpkg-query -W --showformat='${Package} ${Version}\n' > extract-cd/casper/filesystem.manifest
+chroot edit dpkg-query -W --showformat='${Package} ${Version}\n' > filesystem.manifest
+mv edit/filesystem.manifest extract-cd/casper/filesystem.manifest
+
 sudo cp extract-cd/casper/filesystem.manifest extract-cd/casper/filesystem.manifest-desktop
 sed -i '/ubiquity/d' extract-cd/casper/filesystem.manifest-desktop
 sed -i '/casper/d' extract-cd/casper/filesystem.manifest-desktop
 
-sudo rm extract-cd/casper/filesystem.squashfs
+
 # Best compression allowed
-mksquashfs edit extract-cd/casper/filesystem.squashfs
+sudo rm extract-cd/casper/filesystem.squashfs
+mksquashfs edit extract-cd/casper/filesystem.squashfs -comp xz
+
 printf $(sudo du -sx --block-size=1 edit | cut -f1) > extract-cd/casper/filesystem.size
 
 #Name of the image
@@ -95,11 +99,14 @@ cd $path/extract-cd
 rm md5sum.txt
 find -type f -print0 | xargs -0 md5sum | grep -v isolinux/boot.cat | tee md5sum.txt
 
-sudo mksquashfs edit extract-cd/casper/filesystem.squashfs -comp xz -e edit/boot
-
-sudo mkisofs -D -r -V "$image_name" -cache-inodes -J -l -b isolinux/isolinux.bin -c isolinux/boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table -o ../ubuntu-14.04-desktop-remix.iso .
+#Must execute in extract-cd file!
+sudo mkisofs --joliet-long -D -r -V "$image_name" -cache-inodes -J -l -b isolinux/isolinux.bin -c isolinux/boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table -o ../ubuntu-14.04-desktop-remix.iso .
 sudo chown $USER ubuntu-14.04-desktop-remix.iso
+
+cd $path
+mv clean.sh edit
+chroot edit clean.sh
 umount edit/dev
 umount mnt
-
+rm -rf mnt edit squashfs-root 
 
