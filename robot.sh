@@ -16,13 +16,13 @@ if [ "$EUID" -ne 0 ]
 fi
 
 #prep mysql: for debugging, otherwise mysql socket of host system will be used
-check_mysql_running=($netstat -lnt| awk '$6 == "LISTEN" && $4 ~ ".3306"')
-if [ "${check_mysql_running}" -ne  0 ]
+check_mysql_running=$(netstat -lnt | awk '$6 == "LISTEN" && $4 ~ ".3306"')
+if [[ -z "$check_mysql_running" ]]
    then echo "Your Mysql server is running! This can raise issues within chroot environnement. Please disable mysql before running this script."
    exit 1
 fi
 
-#check_apache=($netstat -lnt| awk '$6 == "LISTEN" && $4 ~ ".80"')
+#check_apache=$(netstat -lnt| awk '$6 == "LISTEN" && $4 ~ ".80"')
 #if [ "${check_apache}" -ne  0 ] 
 #   then echo "Your Apache server is running! This can raise issues within chroot environnement. Please disable mysql before running this script."
 #   exit 1
@@ -47,9 +47,10 @@ apt-get install syslinux squashfs-tools genisoimage
 #Mount & Extract iso
 mkdir -p mnt extract-cd edit
 
-mount -o loop ubuntu-14.04-desktop-amd64.iso mnt
+modprobe loop
+mount -o loop,ro ubuntu-14.04-desktop-amd64.iso mnt
 rsync -a mnt/ extract-cd --exclude=casper/filesystem.squashfs
-chmod -R 755 mnt extract-cd edit
+chmod -R 755  extract-cd edit
 
 #Extract the SquashFS filesystem 
 unsquashfs mnt/casper/filesystem.squashfs
