@@ -8,7 +8,7 @@
 #-----------------------------------------------------------------------------------------------------------#
 
 
-path=($pwd)
+path=$(pwd)
 image_name='Entraide_Numerique'
 if [ "$EUID" -ne 0 ]
   then echo "Please run as root"
@@ -17,25 +17,29 @@ fi
 
 #prep mysql: for debugging, otherwise mysql socket of host system will be used
 check_mysql_running=$(netstat -lnt | awk '$6 == "LISTEN" && $4 ~ ".3306"')
-if [[ -z "$check_mysql_running" ]]
+
+# Check if variable has length greater than 0
+if [ -n ${check_mysql_running} ]
    then echo "Your Mysql server is running! This can raise issues within chroot environnement. Please disable mysql before running this script."
    exit 1
 fi
 
+
 #check_apache=$(netstat -lnt| awk '$6 == "LISTEN" && $4 ~ ".80"')
-#if [ "${check_apache}" -ne  0 ] 
+# Check if variable has length greater than 0
+#if [ -n "${check_apache}"  ] 
 #   then echo "Your Apache server is running! This can raise issues within chroot environnement. Please disable mysql before running this script."
 #   exit 1
 #fi
 
-
-if [ -e ./ubuntu-14.04-desktop-amd64.iso ];
+#Checks if file exists and is not empty
+if [ -s ./ubuntu-14.04-desktop-amd64.iso ];
     then echo "ubuntu iso already exists" 
 else 
     wget http://releases.ubuntu.com/14.04/ubuntu-14.04-desktop-amd64.iso -O ubuntu-14.04-desktop-amd64.iso 
     wget http://releases.ubuntu.com/trusty/MD5SUMS
     sumcheck={$md5sum -c <(grep ubuntu-14.04-desktop-amd64.iso MD5SUMS)}
-    if [$sumcheck -ne 1]
+    if [ -n "$sumcheck" ]
         then echo "Exited because MD5 checksum isn't correct!"
 	exit 1
     fi
@@ -105,8 +109,14 @@ sudo mkisofs --joliet-long -D -r -V "$image_name" -cache-inodes -J -l -b isolinu
 sudo chown $USER ubuntu-14.04-desktop-remix.iso
 
 cd $path
-mv clean.sh edit
+
+exit
+
+touch $path/edit/clean.sh
+cat "apt-get clean; umount proc sys /dev/pts; exit">$path/edit/clean.sh
 chroot edit clean.sh
+rm -rf $path/edit/clean.sh
+
 umount edit/dev
 umount mnt
 rm -rf mnt edit squashfs-root 
