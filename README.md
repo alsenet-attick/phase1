@@ -16,19 +16,16 @@ Liste des applications:<br>
 
 
 Liste des modifications:
-* Mariadb install automation
-* 
+* MariaDB install automation
 * param to enable connection while chroot: modif resolv.conf, hosts, apt-list
-* modification de l'écran de démarrage et wallpapaer (à ajouter: logos et visuels de entraide numérique)
+* Splash screen modification and wallpapers (logos and design of entraide numérique)
 * installation des applications framas et d'un wiki
-* param mysql et apache pour starter au début de l'installation
-
-
+* param mariaDB et apache pour starter au début de l'installation
 
 
 RoadMap:
-* Individual Key generation for each usb iso passwords
-* To test: Screen etherpad executing an instances
-* Ethercalc
+* Individual Key generation for each services passwords usb.
+* To test: Screen executing instance of etherpad on boot
+* Ethercalc issues
 * Diaspora ?
 
