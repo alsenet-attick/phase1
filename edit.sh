@@ -91,5 +91,7 @@ apt-get update
 adduser -u 26 etherclac -g services
 npm install -g ethercalc
 
+umount /dev/pts /proc /sys
+
 exit
 
