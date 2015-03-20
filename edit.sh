@@ -26,7 +26,10 @@ apt-get install -y software-properties-common
 apt-key adv --recv-keys --keyserver hkp://keyserver.ubuntu.com:80 0xcbcb082a1bb943db
 add-apt-repository -y 'deb http://mariadb.mirror.nucleus.be//repo/10.0/ubuntu trusty main'
 apt-get -y update
-DEBIAN_FRONTEND=noninteractive apt-get -y install mariadb-server
+#sudo debconf-set-selections <<< 'mariadb-server-5.5 mariadb-server-5.5/root_password password your_password'
+#sudo debconf-set-selections <<< 'mariadb-server-5.5 mariadb-server-5.5/root_password_again password your_password'
+
+DEBIAN_FRONTEND=noninteractive apt-get -q -y install mariadb-server5.5
 mysqladmin -u root password $MYSQL_PASSWORD
 apt-get install -y php5-mysql php5 libapache2-mod-php5 
 
@@ -81,7 +84,7 @@ cat cd /var/www/wisemapping && java -Xmx256m -Dorg.apache.jasper.compiler.disabl
 
 #touch passwords.txt
 #echo $hash >> passwords.txt
-cd
+cd /
 
 # ethercalc
 apt-add-repository ppa:chris-lea/redis-server
@@ -91,7 +94,10 @@ apt-get update
 adduser -u 26 etherclac -g services
 npm install -g ethercalc
 
-umount /dev/pts /proc /sys
 
+umount /proc || umount -lf /proc
+umount /sys
+umount /dev/pts
+rm -rf proc sys /dev/pts
 exit
 

@@ -19,11 +19,8 @@ fi
 check_mysql_running=$(netstat -lnt | awk '$6 == "LISTEN" && $4 ~ ".3306"')
 
 # Check if variable has length greater than 0
-if [ -n ${check_mysql_running} ]
-   then echo "Your Mysql server is running! This can raise issues within chroot environnement. Please disable mysql before running this script."
-   exit 1
-fi
-
+if [ -z "${check_mysql_running}" ]; 
+then
 
 #check_apache=$(netstat -lnt| awk '$6 == "LISTEN" && $4 ~ ".80"')
 # Check if variable has length greater than 0
@@ -33,9 +30,10 @@ fi
 #fi
 
 #Checks if file exists and is not empty
-if [ -s ./ubuntu-14.04-desktop-amd64.iso ];
+ if [ -s ./ubuntu-14.04-desktop-amd64.iso ];
     then echo "ubuntu iso already exists" 
-else 
+ else 
+    apt-get install wget
     wget http://releases.ubuntu.com/14.04/ubuntu-14.04-desktop-amd64.iso -O ubuntu-14.04-desktop-amd64.iso 
     wget http://releases.ubuntu.com/trusty/MD5SUMS
     sumcheck={$md5sum -c <(grep ubuntu-14.04-desktop-amd64.iso MD5SUMS)}
@@ -43,7 +41,7 @@ else
         then echo "Exited because MD5 checksum isn't correct!"
 	exit 1
     fi
-fi
+ fi
 
 #DEPENDENCIES
 apt-get install syslinux squashfs-tools genisoimage
@@ -68,7 +66,7 @@ chmod -R 755 edit
 
 cp /etc/hosts edit/etc
 # OpenDNS server
-echo 'nameserver 208.67.222.123' | sudo tee -a edit/etc/resolv.conf
+echo 'nameserver 208.67.222.123'>>edit/etc/resolv.conf
 # When design for entraide numerique, can create own resolv.conf hosts in edit/etc/
 mount --bind /dev/ edit/dev
 echo 'base system ready for operations!'
@@ -77,12 +75,13 @@ echo 'base system ready for operations!'
 
 chroot edit /edit.sh
 # Exec of edit.sh code
+umount edit/dev
 cd $path
 
 chmod +w extract-cd/casper/filesystem.manifest
 
 # Prepare ISO file
-chroot edit dpkg-query -W --showformat='${Package} ${Version}\n' > filesystem.manifest
+chroot edit $(dpkg-query -W --showformat='${Package} ${Version}\n' > filesystem.manifest && exit)
 mv edit/filesystem.manifest extract-cd/casper/filesystem.manifest
 
 sudo cp extract-cd/casper/filesystem.manifest extract-cd/casper/filesystem.manifest-desktop
@@ -105,19 +104,21 @@ rm md5sum.txt
 find -type f -print0 | xargs -0 md5sum | grep -v isolinux/boot.cat | tee md5sum.txt
 
 #Must execute in extract-cd file!
-sudo mkisofs --joliet-long -D -r -V "$image_name" -cache-inodes -J -l -b isolinux/isolinux.bin -c isolinux/boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table -o ../ubuntu-14.04-desktop-remix.iso .
+sudo mkisofs --joliet-long -r -V "$image_name" -cache-inodes -J -l -b isolinux/isolinux.bin -c isolinux/boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table -o ../ubuntu-14.04-desktop-remix.iso .
+cd $path
 sudo chown $USER ubuntu-14.04-desktop-remix.iso
 
-cd $path
-
-exit
-
 touch $path/edit/clean.sh
-cat "apt-get clean; umount proc sys /dev/pts; exit">$path/edit/clean.sh
+printf "!#/bin/bash\napt-get clean \numount proc sys /dev/pts\n exit">$path/edit/clean.sh
 chroot edit clean.sh
 rm -rf $path/edit/clean.sh
 
-umount edit/dev
+
 umount mnt
 rm -rf mnt edit squashfs-root 
+
+else
+   echo "Your Mysql server is running! This can raise issues within chroot environnement. Please disable mysql before running this script."
+   exit 1
+fi
 
